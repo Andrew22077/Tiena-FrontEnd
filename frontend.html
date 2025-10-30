@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Gestión - Tienda</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 { font-size: 2rem; }
+
+        .main-content { padding: 20px; }
+
+        .section {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .section-title {
+            color: #495057;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0056b3; }
+        .btn-edit { background: #28a745; color: white; padding: 5px 10px; font-size: 12px; }
+        .btn-edit:hover { background: #218838; }
+        .btn-delete { background: #dc3545; color: white; padding: 5px 10px; font-size: 12px; }
+        .btn-delete:hover { background: #c82333; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #343a40;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tr:hover { background: #f8f9fa; }
+
+        .actions { display: flex; gap: 5px; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6c757d;
+        }
+
+        .form-group { margin-bottom: 15px; }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .alert {
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .section-header { flex-direction: column; gap: 10px; }
+            .modal-content { width: 95vw; margin: 10px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1><i class="fas fa-store"></i> Sistema de Gestión de Tienda</h1>
+        <p th:text="${mensaje}">Panel de administración</p>
+    </div>
+
+    <div class="main-content">
+        <div id="alert-container"></div>
+
+        <!-- CLIENTES -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-users"></i> Clientes</h2>
+                <button class="btn btn-primary" onclick="abrirModal('cliente')">
+                    <i class="fas fa-plus"></i> Nuevo Cliente
+                </button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${clientes}">
+                    <td th:text="${c.id}"></td>
+                    <td th:text="${c.nombre}"></td>
+                    <td th:text="${c.documento}"></td>
+                    <td th:text="${c.email}"></td>
+                    <td th:text="${c.telefono}"></td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-edit" th:onclick="'editar(\'cliente\', ' + ${c.id} + ')'">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-delete" th:onclick="'eliminar(\'cliente\', ' + ${c.id} + ')'">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PRODUCTOS -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-box"></i> Productos</h2>
+                <button class="btn btn-primary" onclick="abrirModal('producto')">
+                    <i class="fas fa-plus"></i> Nuevo Producto
+                </button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${productos}">
+                    <td th:text="${p.id}"></td>
+                    <td th:text="${p.nombre}"></td>
+                    <td th:text="${p.precio}"></td>
+                    <td th:text="${p.stockMinimo}"></td>
+                    <td>
+                        <span th:if="${p.activo}" style="color: #28a745; font-weight: bold;">
+                            <i class="fas fa-check-circle"></i> Activo
+                        </span>
+                        <span th:unless="${p.activo}" style="color: #dc3545; font-weight: bold;">
+                            <i class="fas fa-times-circle"></i> Inactivo
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-edit" th:onclick="'editar(\'producto\', ' + ${p.id} + ')'">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-delete" th:onclick="'eliminar(\'producto\', ' + ${p.id} + ')'">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PROVEEDORES -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-truck"></i> Proveedores</h2>
+                <button class="btn btn-primary" onclick="abrirModal('proveedor')">
+                    <i class="fas fa-plus"></i> Nuevo Proveedor
+                </button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Producto</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="pr : ${proveedores}">
+                    <td th:text="${pr.id}"></td>
+                    <td th:text="${pr.Nombre}"></td>
+                    <td th:text="${pr.Telefono}"></td>
+                    <td th:text="${pr.producto != null ? pr.producto.nombre : 'Sin producto'}"></td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-edit" th:onclick="'editar(\'proveedor\', ' + ${pr.id} + ')'">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-delete" th:onclick="'eliminar(\'proveedor\', ' + ${pr.id} + ')'">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- USUARIOS -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-user-tie"></i> Usuarios</h2>
+                <button class="btn btn-primary" onclick="abrirModal('usuario')">
+                    <i class="fas fa-plus"></i> Nuevo Usuario
+                </button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Documento</th>
+                    <th>Cargo</th>
+                    <th>Teléfono</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${usuarios}">
+                    <td th:text="${u.id}"></td>
+                    <td th:text="${u.nombre}"></td>
+                    <td th:text="${u.documento}"></td>
+                    <td th:text="${u.cargo}"></td>
+                    <td th:text="${u.telefono}"></td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-edit" th:onclick="'editar(\'usuario\', ' + ${u.id} + ')'">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-delete" th:onclick="'eliminar(\'usuario\', ' + ${u.id} + ')'">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- VENTAS -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-shopping-cart"></i> Ventas</h2>
+                <button class="btn btn-primary" onclick="abrirModal('venta')">
+                    <i class="fas fa-plus"></i> Nueva Venta
+                </button>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Precio</th>
+                    <th>Cliente</th>
+                    <th>Producto</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="v : ${ventas}">
+                    <td th:text="${v.id}"></td>
+                    <td th:text="${v.fecha}"></td>
+                    <td th:text="${v.precioVenta}"></td>
+                    <td th:text="${v.cliente != null ? v.cliente.nombre : 'Cliente eliminado'}"></td>
+                    <td th:text="${v.producto != null ? v.producto.nombre : 'Producto eliminado'}"></td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn btn-edit" th:onclick="'editar(\'venta\', ' + ${v.id} + ')'">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-delete" th:onclick="'eliminar(\'venta\', ' + ${v.id} + ')'">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ÚNICO -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title" class="modal-title">Nuevo Registro</h3>
+            <button type="button" class="close-btn" onclick="cerrarModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div id="form-container">
+            <input type="hidden" id="entidad">
+            <input type="hidden" id="id">
+
+            <div id="form-fields"></div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardar()">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const endpoints = {
+        'cliente': 'clientes',
+        'producto': 'productos',
+        'proveedor': 'proveedores',
+        'usuario': 'usuarios',
+        'venta': 'ventas'
+    };
+
+    const campos = {
+        cliente: [
+            {id: 'nombre', label: 'Nombre', type: 'text', required: true},
+            {id: 'documento', label: 'Documento', type: 'text', required: true},
+            {id: 'email', label: 'Email', type: 'email', required: true},
+            {id: 'telefono', label: 'Teléfono', type: 'text', required: false}
+        ],
+        producto: [
+            {id: 'nombre', label: 'Nombre', type: 'text', required: true},
+            {id: 'precio', label: 'Precio', type: 'number', required: true, step: '0.01', min: '0'},
+            {id: 'stockMinimo', label: 'Stock Mínimo', type: 'number', required: true, min: '0'},
+            {id: 'activo', label: 'Estado', type: 'select', required: true, options: [{value: 'true', text: 'Activo'}, {value: 'false', text: 'Inactivo'}]}
+        ],
+        proveedor: [
+            {id: 'Nombre', label: 'Nombre', type: 'text', required: true},
+            {id: 'Telefono', label: 'Teléfono', type: 'text', required: true},
+            {id: 'productoId', label: 'Producto', type: 'select', required: true, options: 'productos'}
+        ],
+        usuario: [
+            {id: 'nombre', label: 'Nombre', type: 'text', required: true},
+            {id: 'documento', label: 'Documento', type: 'text', required: true},
+            {id: 'cargo', label: 'Cargo', type: 'text', required: true},
+            {id: 'telefono', label: 'Teléfono', type: 'text', required: false}
+        ],
+        venta: [
+            {id: 'fecha', label: 'Fecha', type: 'date', required: true},
+            {id: 'precioVenta', label: 'Precio de Venta', type: 'number', required: true, min: '0'},
+            {id: 'clienteId', label: 'Cliente', type: 'select', required: true, options: 'clientes'},
+            {id: 'productoId', label: 'Producto', type: 'select', required: true, options: 'productos'}
+        ]
+    };
+
+    function mostrarAlerta(mensaje, tipo = 'success') {
+        const alertContainer = document.getElementById('alert-container');
+        alertContainer.innerHTML = `<div class="alert alert-${tipo}">${mensaje}</div>`;
+        setTimeout(() => { alertContainer.innerHTML = ''; }, 3000);
+    }
+
+    function abrirModal(entidad) {
+        document.getElementById('modal').classList.add('show');
+        document.getElementById('modal-title').textContent = `Nuevo ${entidad.charAt(0).toUpperCase() + entidad.slice(1)}`;
+        document.getElementById('entidad').value = entidad;
+        document.getElementById('id').value = '';
+
+        generarFormulario(entidad);
+
+        if (entidad === 'venta') {
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        }
+    }
+
+    function generarFormulario(entidad) {
+        const container = document.getElementById('form-fields');
+        container.innerHTML = '';
+
+        campos[entidad].forEach(campo => {
+            const formGroup = document.createElement('div');
+            formGroup.className = 'form-group';
+
+            const label = document.createElement('label');
+            label.className = 'form-label';
+            label.textContent = campo.label;
+            formGroup.appendChild(label);
+
+            let input;
+            if (campo.type === 'select') {
+                input = document.createElement('select');
+                input.className = 'form-control';
+
+                if (campo.options === 'productos') {
+                    input.innerHTML = '<option value="">Seleccione un producto</option>';
+                    // Productos serán cargados dinámicamente desde Thymeleaf
+                } else if (campo.options === 'clientes') {
+                    input.innerHTML = '<option value="">Seleccione un cliente</option>';
+                    // Clientes serán cargados dinámicamente desde Thymeleaf
+                } else if (Array.isArray(campo.options)) {
+                    input.innerHTML = campo.options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+                }
+            } else {
+                input = document.createElement('input');
+                input.type = campo.type;
+                input.className = 'form-control';
+                if (campo.step) input.step = campo.step;
+                if (campo.min) input.min = campo.min;
+            }
+
+            input.id = campo.id;
+            if (campo.required) input.required = true;
+
+            formGroup.appendChild(input);
+            container.appendChild(formGroup);
+        });
+
+        // Llenar selects con datos de Thymeleaf si están disponibles
+        if (entidad === 'proveedor' || entidad === 'venta') {
+            cargarOpcionesSelect();
+        }
+    }
+
+    function cargarOpcionesSelect() {
+        // Para productos
+        const productSelect = document.getElementById('productoId');
+        if (productSelect && window.productos) {
+            window.productos.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.nombre;
+                productSelect.appendChild(option);
+            });
+        }
+
+        // Para clientes
+        const clientSelect = document.getElementById('clienteId');
+        if (clientSelect && window.clientes) {
+            window.clientes.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.nombre;
+                clientSelect.appendChild(option);
+            });
+        }
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal').classList.remove('show');
+    }
+
+    async function editar(entidad, id) {
+        try {
+            const response = await fetch(`/${endpoints[entidad]}/${id}`);
+            if (!response.ok) throw new Error('Error al cargar datos');
+
+            const data = await response.json();
+
+            abrirModal(entidad);
+            document.getElementById('modal-title').textContent = `Editar ${entidad.charAt(0).toUpperCase() + entidad.slice(1)}`;
+            document.getElementById('id').value = data.id;
+
+            // Llenar campos
+            campos[entidad].forEach(campo => {
+                const element = document.getElementById(campo.id);
+                if (element) {
+                    if (campo.id === 'productoId' && data.producto) {
+                        element.value = data.producto.id;
+                    } else if (campo.id === 'clienteId' && data.cliente) {
+                        element.value = data.cliente.id;
+                    } else if (data[campo.id] !== undefined) {
+                        element.value = data[campo.id];
+                    }
+                }
+            });
+        } catch (error) {
+            mostrarAlerta(`Error al cargar datos: ${error.message}`, 'danger');
+        }
+    }
+
+    async function eliminar(entidad, id) {
+        if (confirm(`¿Está seguro de eliminar este ${entidad}?`)) {
+            try {
+                const response = await fetch(`/${endpoints[entidad]}/${id}`, { method: 'DELETE' });
+
+                if (response.ok) {
+                    mostrarAlerta(`${entidad.charAt(0).toUpperCase() + entidad.slice(1)} eliminado correctamente`);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    throw new Error('Error al eliminar');
+                }
+            } catch (error) {
+                mostrarAlerta(`Error: ${error.message}`, 'danger');
+            }
+        }
+    }
+
+    async function guardar() {
+        const entidad = document.getElementById('entidad').value;
+        const id = document.getElementById('id').value;
+        const esEdicion = !!id;
+
+        let body = {};
+
+        campos[entidad].forEach(campo => {
+            const element = document.getElementById(campo.id);
+            if (element && element.value) {
+                if (campo.type === 'number') {
+                    body[campo.id] = campo.step === '0.01' ? parseFloat(element.value) : parseInt(element.value);
+                } else if (campo.id === 'activo') {
+                    body[campo.id] = element.value === 'true';
+                } else if (campo.id === 'productoId') {
+                    body.producto = { id: parseInt(element.value) };
+                } else if (campo.id === 'clienteId') {
+                    body.cliente = { id: parseInt(element.value) };
+                } else {
+                    body[campo.id] = element.value;
+                }
+            }
+        });
+
+        if (esEdicion) {
+            body.id = parseInt(id);
+        }
+
+        try {
+            const url = `/${endpoints[entidad]}${esEdicion ? `/${id}` : ''}`;
+            const method = esEdicion ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (response.ok) {
+                mostrarAlerta(`${entidad.charAt(0).toUpperCase() + entidad.slice(1)} ${esEdicion ? 'actualizado' : 'creado'} correctamente`);
+                cerrarModal();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                const errorText = await response.text();
+                throw new Error(errorText || 'Error al guardar');
+            }
+        } catch (error) {
+            mostrarAlerta(`Error: ${error.message}`, 'danger');
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModal();
+        }
+    });
+
+    document.getElementById('modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModal();
+        }
+    });
+
+    // Cargar datos desde Thymeleaf al iniciar
+    document.addEventListener('DOMContentLoaded', function() {
+        // Extraer datos de las tablas para usar en selects
+        window.productos = [];
+        window.clientes = [];
+
+        document.querySelectorAll('table').forEach(table => {
+            const headers = Array.from(table.querySelectorAll('th')).map(th => th.textContent.toLowerCase());
+
+            if (headers.includes('precio')) {
+                // Es tabla de productos
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length > 0) {
+                        window.productos.push({
+                            id: cells[0].textContent,
+                            nombre: cells[1].textContent
+                        });
+                    }
+                });
+            } else if (headers.includes('email')) {
+                // Es tabla de clientes
+                table.querySelectorAll('tbody tr').forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length > 0) {
+                        window.clientes.push({
+                            id: cells[0].textContent,
+                            nombre: cells[1].textContent
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>
